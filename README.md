@@ -88,6 +88,11 @@ auto-update, translation.
 
 ## Build & run
 
+> **Picking this up on another machine (incl. Windows)?** Read
+> [CLAUDE.md](CLAUDE.md) — it's the full handoff: how everything works, how it's
+> built/verified, and the exact steps to continue. A fresh Claude Code session
+> started in this repo reads it automatically.
+
 Requires the .NET 10 SDK.
 
 ```bash
