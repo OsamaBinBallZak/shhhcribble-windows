@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Fast, cross-platform: proves the portable Core (transcription pipeline +
+  # text processing) builds and its behaviour-parity tests pass. Runs on Linux
+  # because it needs no Windows desktop APIs.
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Test Core
+        run: dotnet test tests/Shhhcribble.Core.Tests/Shhhcribble.Core.Tests.csproj -c Release
+
+  # The real thing: builds the Windows desktop app (WPF + Win32 integrations)
+  # on a real Windows runner, runs tests, and publishes a self-contained build
+  # + installer as a downloadable artifact. This is how we verify the full app
+  # without a local Windows machine.
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build solution
+        run: dotnet build Shhhcribble.sln -c Release
+
+      - name: Test
+        run: dotnet test tests/Shhhcribble.Core.Tests/Shhhcribble.Core.Tests.csproj -c Release --no-build
+
+      - name: Publish Windows app (self-contained x64)
+        run: >
+          dotnet publish src/Shhhcribble.Windows/Shhhcribble.Windows.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=false
+          -o publish/Shhhcribble
+
+      - name: Build installer (Inno Setup)
+        run: |
+          choco install innosetup --no-progress -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\Shhhcribble.iss
+
+      - name: Upload app (zipped)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shhhcribble-win-x64
+          path: publish/Shhhcribble
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shhhcribble-Setup
+          path: installer/Output/*.exe
+          if-no-files-found: ignore

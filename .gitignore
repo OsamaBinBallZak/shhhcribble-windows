@@ -1,0 +1,32 @@
+# Build output
+bin/
+obj/
+out/
+publish/
+
+# Rider / VS / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+
+# macOS
+.DS_Store
+
+# Test results
+[Tt]est[Rr]esults/
+*.trx
+
+# NuGet
+*.nupkg
+.nuget/
+
+# Local model cache (downloaded on first run, ~480 MB — never commit)
+models/
+*.onnx
+*.tar.bz2
+
+# Installer build artifacts
+*.msi
+*.exe
+!**/Resources/**/*.exe
