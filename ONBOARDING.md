@@ -39,6 +39,7 @@ Then work through the smoke-test checklist and fix whatever breaks. The build/ve
 |---|---|
 | **[CLAUDE.md](CLAUDE.md)** | The full handoff — how every subsystem works, the recording flow, design decisions, known risks, all commands. Auto-read by any Claude session here. |
 | **[docs/FEATURE_PARITY.md](docs/FEATURE_PARITY.md)** | Every macOS feature vs. its Windows status — the coverage audit. |
+| **[docs/BEHAVIOR_SPEC.md](docs/BEHAVIOR_SPEC.md)** | The exact details (pill position, waveform math, timings, flow) pulled from the macOS source — so subtle behavior doesn't get lost. |
 | **[docs/WINDOWS_TESTING.md](docs/WINDOWS_TESTING.md)** | The click-through smoke-test checklist for real Windows. |
 | **[README.md](README.md)** | Overview, architecture, the macOS→Windows subsystem map, download/install. |
 

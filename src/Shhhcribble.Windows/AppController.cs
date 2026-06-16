@@ -36,8 +36,8 @@ public sealed class AppController : IDisposable
 
     private State _state = State.Idle;
 
-    // Hybrid-gesture bookkeeping.
-    private const int TapThresholdMs = 300;
+    // Hybrid-gesture bookkeeping. 500 ms hold threshold matches the macOS app.
+    private const int TapThresholdMs = 500;
     private readonly Stopwatch _pressTimer = new();
     private bool _armed;        // a press started a recording that's awaiting tap/hold classification
     private bool _toggleActive; // recording is latched on via a tap

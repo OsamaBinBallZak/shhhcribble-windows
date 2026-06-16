@@ -20,9 +20,15 @@ namespace Shhhcribble.Windows.UI;
 public partial class LozengeWindow : Window
 {
     private readonly DispatcherTimer _hideTimer = new();
-    private readonly DispatcherTimer _waveTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
-    private readonly Random _rng = new();
+    // 50 ms cadence + phase step 0.35 mirror the macOS SoundwaveBars timer.
+    private readonly DispatcherTimer _waveTimer = new() { Interval = TimeSpan.FromMilliseconds(50) };
     private readonly List<Rectangle> _bars = new();
+    private double _phase;
+
+    /// <summary>Latest mic level in [0,1], fed from the recorder so the bars
+    /// react to real audio (matches macOS). Until that's wired, a mid-level
+    /// default keeps the wave visibly alive.</summary>
+    public double AudioLevel { get; set; } = 0.5;
 
     public LozengeWindow()
     {
@@ -54,11 +60,17 @@ public partial class LozengeWindow : Window
 
     private void AnimateBars()
     {
-        foreach (var bar in _bars)
+        // Flowing sine wave swelling with the mic level — the macOS SoundwaveBars
+        // formula: height = 4 + level * 32 * (0.65 + 0.35*sin(phase + i*0.75)).
+        // Scaled to this 22 px-tall canvas.
+        _phase += 0.35;
+        double level = Math.Max(AudioLevel, 0.05);
+        for (int i = 0; i < _bars.Count; i++)
         {
-            double h = 4 + _rng.NextDouble() * 18;
-            bar.Height = h;
-            Canvas.SetTop(bar, (22 - h) / 2);
+            double normalised = 0.65 + 0.35 * Math.Sin(_phase + i * 0.75);
+            double h = 4 + level * 20 * normalised;
+            _bars[i].Height = h;
+            Canvas.SetTop(_bars[i], (22 - h) / 2);
         }
     }
 
@@ -75,7 +87,7 @@ public partial class LozengeWindow : Window
 
     public void ShowCopied()
     {
-        Label.Text = "Copied ✓";
+        Label.Text = "Copied! Ctrl+V to paste";
         StopWaves();
         Present();
         AutoHide(TimeSpan.FromSeconds(1.0));
@@ -133,9 +145,11 @@ public partial class LozengeWindow : Window
         // Recompute after content has measured.
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {
+            // Top-center, ~8 px below the top of the work area — matches the
+            // macOS SoundwavePanel.positionAtTopCenter().
             var area = SystemParameters.WorkArea;
             Left = area.Left + (area.Width - ActualWidth) / 2;
-            Top = area.Bottom - ActualHeight - 90;
+            Top = area.Top + 8;
         });
     }
 
