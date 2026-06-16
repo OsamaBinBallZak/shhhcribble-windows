@@ -16,7 +16,7 @@ that has a documented spec on macOS is ported 1:1 and pinned by tests.
 |---|---|
 | **Core** — transcription pipeline, filler filter, personal dictionary, audio | ✅ Done, tested on macOS + CI |
 | **On-device Parakeet V3 transcription (ONNX)** | ✅ **Proven** — transcribes on macOS in ~180 ms / 5 s clip |
-| **Windows app** — tray, hotkey, mic, paste, music-pause, settings UI | 🚧 Next phase (builds on the `windows-latest` CI runner) |
+| **Windows app** — tray, hotkey, mic, paste, music-pause, settings UI | ✅ Builds, publishes & packages an installer on CI. Runtime smoke-test on Windows still pending — see [docs/WINDOWS_TESTING.md](docs/WINDOWS_TESTING.md) |
 
 ### Verification model
 
@@ -30,6 +30,25 @@ The author develops on a Mac and has no local Windows machine, so:
   [.github/workflows/ci.yml](.github/workflows/ci.yml)). Interactive
   hotkey/paste/mic smoke-testing is the one step that still needs a human on
   Windows.
+
+## Download & install (Windows)
+
+Every green CI run on `main` produces a ready-to-run installer. To get it:
+
+1. Open the repo's **Actions** tab → latest successful run → **Artifacts**.
+2. Download **`Shhhcribble-Setup`** and unzip → `Shhhcribble-Setup.exe`.
+3. Run it (per-user install, no admin). Windows SmartScreen will warn because the
+   installer is unsigned — **More info → Run anyway**.
+
+Or from a machine with the GitHub CLI:
+
+```bash
+gh run download --repo OsamaBinBallZak/shhhcribble-windows -n Shhhcribble-Setup
+```
+
+To hand it to friends, just send them the `Shhhcribble-Setup.exe` file — it's
+self-contained (bundles the .NET runtime + ONNX engine; the speech model
+downloads itself on first launch).
 
 ## Architecture
 
@@ -55,12 +74,14 @@ Shhhcribble.sln
 |---|---|---|---|
 | Transcription | Parakeet V3 on CoreML (FluidAudio) | Parakeet V3 on ONNX (sherpa-onnx) | ✅ |
 | Filler filter / dictionary | Swift regex | C# regex (1:1, tested) | ✅ |
-| Audio capture | AVAudioEngine | NAudio (WASAPI) | 🚧 |
-| Global hotkey | Carbon RegisterEventHotKey | `RegisterHotKey` / low-level kbd hook | 🚧 |
-| Paste into focused app | Accessibility API + ⌘V | UI Automation + `SendInput` (Ctrl+V) | 🚧 |
-| Menu-bar UI | NSStatusItem | tray icon (WPF + Win32 NotifyIcon) | 🚧 |
-| Soundwave lozenge | NSPanel + SwiftUI | borderless topmost WPF window | 🚧 |
-| Music pause | AppleScript → Spotify/Music | Windows SMTC (covers browsers too) | 🚧 |
+| Audio capture | AVAudioEngine | NAudio (WASAPI), fresh per recording | ✅ built |
+| Global hotkey | Carbon RegisterEventHotKey | low-level kbd hook (sees key-up for hold) | ✅ built |
+| Paste into focused app | Accessibility API + ⌘V | clipboard + `SendInput` (Ctrl+V) + restore | ✅ built |
+| Menu-bar UI | NSStatusItem | tray icon (WinForms NotifyIcon) | ✅ built |
+| Soundwave lozenge | NSPanel + SwiftUI | borderless, click-through WPF window | ✅ built |
+| Music pause | AppleScript → Spotify/Music | Windows SMTC (covers browsers too) | ✅ built |
+
+(✅ built = compiles + publishes on CI; behaviour still needs a human smoke-test on Windows.)
 
 Cut for this port (per project owner): transcript cleanup (the on-device LLM),
 auto-update, translation.
