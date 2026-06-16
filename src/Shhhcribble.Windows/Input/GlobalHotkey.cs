@@ -49,12 +49,14 @@ public sealed class GlobalHotkey : IDisposable
         _hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, _proc, GetModuleHandle(module.ModuleName), 0);
         if (_hookHandle == IntPtr.Zero)
             throw new InvalidOperationException("Failed to install keyboard hook.");
+        Debug.WriteLine($"[GlobalHotkey] Hotkey registered: {_hotkey.Label}");
     }
 
     public void SetHotkey(HotkeyOption hotkey)
     {
         _hotkey = hotkey;
         _triggerDown = false;
+        Debug.WriteLine($"[GlobalHotkey] Hotkey updated: {_hotkey.Label}");
     }
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)

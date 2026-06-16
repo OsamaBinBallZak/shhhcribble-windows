@@ -8,21 +8,132 @@
         ShowActivated="False"
         Topmost="True"
         ResizeMode="NoResize"
-        SizeToContent="WidthAndHeight"
+        Width="400"
+        Height="136"
         Focusable="False"
         IsHitTestVisible="False">
-    <Border CornerRadius="18" Padding="18,11" Background="#E6202124">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="18" ShadowDepth="0" Opacity="0.45" Color="Black"/>
-        </Border.Effect>
-        <StackPanel Orientation="Horizontal">
-            <Canvas x:Name="Waves" Width="52" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
-            <TextBlock x:Name="Label"
-                       Foreground="#F5F5F7"
-                       FontSize="14"
-                       FontWeight="Medium"
-                       VerticalAlignment="Center"
-                       Text="Listening…"/>
-        </StackPanel>
-    </Border>
+
+    <!-- Outer transparent 400x136 container gives the spring animation room to
+         overshoot without being clipped by the window boundary (same as macOS 400x136 NSPanel). -->
+    <Grid>
+        <!-- Inner animated pill — 320x56, centred in the oversized frame -->
+        <Border x:Name="Pill"
+                Width="320"
+                Height="56"
+                CornerRadius="28"
+                Background="#F01A1A1F"
+                BorderThickness="0.75"
+                BorderBrush="#47404080"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                RenderTransformOrigin="0.5,0.5">
+            <Border.Effect>
+                <!-- Primary shadow: Direction=270 (downward), ShadowDepth=7, matching macOS y=7 -->
+                <DropShadowEffect Direction="270" ShadowDepth="7" BlurRadius="18" Opacity="0.5" Color="Black"/>
+            </Border.Effect>
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="PillScale" ScaleX="1" ScaleY="1"/>
+                    <TranslateTransform x:Name="PillTranslate" Y="0"/>
+                </TransformGroup>
+            </Border.RenderTransform>
+            <Border.Clip>
+                <RectangleGeometry x:Name="PillClip" RadiusX="28" RadiusY="28">
+                    <RectangleGeometry.Rect>
+                        <Rect X="0" Y="0" Width="320" Height="56"/>
+                    </RectangleGeometry.Rect>
+                </RectangleGeometry>
+            </Border.Clip>
+
+            <!-- Main content row: [icon] [bars+livetext | label] [dot] -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- Leading icon: padding 16 leading + 10 trailing = 39px total (13px icon + 16 + 10) -->
+                    <ColumnDefinition Width="39"/>
+                    <!-- Central content: fills remaining space -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Trailing dot: 22px dot + 2 lead + 12 trail = 36px -->
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Leading state icon (Segoe MDL2 Assets glyphs, size 13, semibold) -->
+                <!-- Default/recording/transcribing = mic (white@0.55); copied = checkmark (green); noResult = waveform-slash; error = warning -->
+                <TextBlock x:Name="StateIcon"
+                           Grid.Column="0"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#8CFFFFFF"
+                           Text="&#xE720;"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"/>
+
+                <!-- Transcribing spinner (ProgressBar as indeterminate; shown only while transcribing) -->
+                <ProgressBar x:Name="TranscribingSpinner"
+                             Grid.Column="0"
+                             Width="13"
+                             Height="13"
+                             IsIndeterminate="True"
+                             Visibility="Collapsed"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Center"
+                             Margin="0,0,10,0"
+                             Foreground="White"/>
+
+                <!-- Central content area — recording state: bars + live text -->
+                <Grid x:Name="RecordingContent" Grid.Column="1" Visibility="Visible">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Soundwave bars canvas: 36x36 -->
+                    <Canvas x:Name="Waves"
+                            Grid.Column="0"
+                            Width="36"
+                            Height="36"
+                            VerticalAlignment="Center"/>
+                    <!-- Live transcript text (size 12, with opacity-mask fade) -->
+                    <Grid Grid.Column="1" Margin="8,0" ClipToBounds="True" VerticalAlignment="Center">
+                        <TextBlock x:Name="LiveText"
+                                   FontSize="12"
+                                   FontWeight="Regular"
+                                   Foreground="White"
+                                   TextTrimming="None"
+                                   TextWrapping="NoWrap"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Left">
+                            <TextBlock.OpacityMask>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Color="Transparent" Offset="0.00"/>
+                                    <GradientStop Color="Black"       Offset="0.12"/>
+                                    <GradientStop Color="Black"       Offset="0.82"/>
+                                    <GradientStop Color="Transparent" Offset="1.00"/>
+                                </LinearGradientBrush>
+                            </TextBlock.OpacityMask>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+
+                <!-- Non-recording label (transcribing/copied/noResult/error/listening) -->
+                <TextBlock x:Name="Label"
+                           Grid.Column="1"
+                           Foreground="#FFFFFFFF"
+                           FontSize="13"
+                           FontWeight="Medium"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Text="Listening…"
+                           Visibility="Collapsed"/>
+
+                <!-- Trailing animated dot: 22x22, centred in 36px column (2 lead + 12 trail -> centred) -->
+                <Canvas x:Name="DotCanvas"
+                        Grid.Column="2"
+                        Width="22"
+                        Height="22"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

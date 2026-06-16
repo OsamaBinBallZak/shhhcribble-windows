@@ -38,7 +38,7 @@ public sealed class ParakeetTranscriptionEngine : IDisposable
     /// </summary>
     public string Transcribe(float[] samples16k)
     {
-        if (samples16k.Length < WavAudio.TargetSampleRate / 2) return "";
+        if (samples16k.Length <= WavAudio.TargetSampleRate / 2) return "";
 
         using var stream = _recognizer.CreateStream();
         stream.AcceptWaveform(WavAudio.TargetSampleRate, samples16k);

@@ -18,12 +18,12 @@ public static class ParakeetModels
 
     public static readonly ParakeetModel V3 = new(
         "parakeet-v3",
-        "Parakeet V3 — Multilingual (25 languages)",
+        "Parakeet V3 (~494 MB) – Multilingual ✦",
         Base + "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2");
 
     public static readonly ParakeetModel V2 = new(
         "parakeet-v2",
-        "Parakeet V2 — English-optimized",
+        "Parakeet V2 (~476 MB) – English-optimized",
         Base + "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2");
 
     public static readonly IReadOnlyList<ParakeetModel> All = new[] { V3, V2 };

@@ -71,4 +71,10 @@ public static class SettingsStore
             Current.History.RemoveRange(HistoryCap, Current.History.Count - HistoryCap);
         Save();
     }
+
+    public static void ClearHistory()
+    {
+        Current.History.Clear();
+        Save();
+    }
 }

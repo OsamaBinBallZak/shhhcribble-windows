@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 using Clipboard = System.Windows.Clipboard; // disambiguate from System.Windows.Forms.Clipboard
+using IDataObject = System.Windows.IDataObject; // disambiguate from System.Windows.Forms.IDataObject
 
 namespace Shhhcribble.Windows.TextInsertion;
 
@@ -19,7 +21,8 @@ namespace Shhhcribble.Windows.TextInsertion;
 /// Clipboard save/restore mirrors macOS: snapshot → write transcription → paste
 /// → after a 2 s window (long enough for the paste to land and for the user to
 /// manually Ctrl+V if a host swallowed the event) restore the prior clipboard,
-/// but only if it hasn't changed in the meantime.
+/// but only if the sequence number is unchanged (i.e. the user didn't copy
+/// anything new in the meantime — any format, not just text).
 /// </summary>
 public sealed class TextInserter
 {
@@ -33,31 +36,72 @@ public sealed class TextInserter
 
         _dispatcher.Invoke(() =>
         {
-            string? previous = SafeGetClipboardText();
+            // Snapshot the full clipboard (all formats — images, files, RTF, etc.)
+            // before we overwrite it.  A null snapshot means the clipboard was empty.
+            IDataObject? previous = SafeGetDataObject();
 
             TrySetClipboardText(text);
+
+            // Capture the sequence number AFTER writing our text.  The Windows
+            // clipboard sequence number is a monotonic counter incremented on every
+            // SetClipboardData / EmptyClipboard call — any new copy by any app, in
+            // any format, advances it.  This mirrors macOS pasteboard.changeCount.
+            uint markerSeq = GetClipboardSequenceNumber();
+            Debug.WriteLine($"[TextInserter] Paste sent. markerSeq={markerSeq}, hasPrior={previous != null}");
+
             SendCtrlV();
 
-            // Restore the prior clipboard after 2 s, but only if our text is still
-            // there (i.e. the user didn't copy something new in the meantime).
+            // Restore the prior clipboard after 2 s, but only if the sequence number
+            // is still at the marker (i.e. nobody has written to the clipboard since
+            // we did).  This is immune to the identical-text false-positive of text
+            // equality, and correctly detects re-copies of any non-text content.
+            // Per macOS parity: if the clipboard was originally empty we do NOT clear
+            // it — we leave our transcription in place.
             var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
             timer.Tick += (_, _) =>
             {
                 timer.Stop();
-                if (SafeGetClipboardText() == text)
+                uint currentSeq = GetClipboardSequenceNumber();
+                if (currentSeq == markerSeq)
                 {
-                    if (previous != null) TrySetClipboardText(previous);
-                    else SafeClearClipboard();
+                    if (previous != null)
+                    {
+                        TrySetDataObject(previous);
+                        Debug.WriteLine($"[TextInserter] Clipboard restored (seq {currentSeq} == marker).");
+                    }
+                    else
+                    {
+                        // Clipboard was empty before we wrote — leave our text in place
+                        // (macOS: guard !priorItems.isEmpty else { return }).
+                        Debug.WriteLine($"[TextInserter] No prior clipboard content — leaving transcription in place (seq {currentSeq} == marker).");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[TextInserter] Restore skipped — clipboard changed (seq {currentSeq} != marker {markerSeq}).");
                 }
             };
             timer.Start();
         });
     }
 
-    private static string? SafeGetClipboardText()
+    // ---- Clipboard helpers ----
+
+    /// <summary>
+    /// Returns the full multi-format clipboard data object, or null if the
+    /// clipboard is empty or cannot be read.
+    /// </summary>
+    private static IDataObject? SafeGetDataObject()
     {
-        try { return Clipboard.ContainsText() ? Clipboard.GetText() : null; }
-        catch { return null; }
+        try
+        {
+            // GetDataObject() returns null when the clipboard is empty.
+            return Clipboard.GetDataObject();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static void TrySetClipboardText(string text)
@@ -68,11 +112,20 @@ public sealed class TextInserter
             try { Clipboard.SetText(text); return; }
             catch { System.Threading.Thread.Sleep(20); }
         }
+        Debug.WriteLine("[TextInserter] WARNING: Failed to set clipboard text after retries.");
     }
 
-    private static void SafeClearClipboard()
+    /// <summary>
+    /// Restores a previously snapshotted full-format data object to the clipboard.
+    /// </summary>
+    private static void TrySetDataObject(IDataObject data)
     {
-        try { Clipboard.Clear(); } catch { /* ignore */ }
+        for (int i = 0; i < 5; i++)
+        {
+            try { Clipboard.SetDataObject(data, copy: true); return; }
+            catch { System.Threading.Thread.Sleep(20); }
+        }
+        Debug.WriteLine("[TextInserter] WARNING: Failed to restore clipboard data object after retries.");
     }
 
     // ---- Ctrl+V via SendInput ----
@@ -128,4 +181,12 @@ public sealed class TextInserter
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    /// <summary>
+    /// Returns a monotonically increasing counter that the system increments every
+    /// time the clipboard contents change (any format).  Mirrors macOS
+    /// NSPasteboard.changeCount.
+    /// </summary>
+    [DllImport("user32.dll")]
+    private static extern uint GetClipboardSequenceNumber();
 }
