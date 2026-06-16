@@ -107,6 +107,31 @@ dotnet run --project src/Shhhcribble.Cli -- audio.wav --model parakeet-v2
 The Windows desktop app builds only on Windows (it references Windows-only
 frameworks); the CI workflow produces a ready-to-run build + installer artifact.
 
+## Contributing (fork → pull request)
+
+Standard GitHub flow — and CI runs automatically on every PR (builds the Windows
+app, runs the tests, packages an installer artifact), so changes are validated
+before they're merged.
+
+```bash
+# 1. Fork to your own account (GitHub "Fork" button, or:)
+gh repo fork OsamaBinBallZak/shhhcribble-windows --clone
+cd shhhcribble-windows
+
+# 2. Branch, change, commit
+git checkout -b fix-mic-format
+#   ...edit, then:
+dotnet test tests/Shhhcribble.Core.Tests     # keep the parity tests green
+git commit -am "Fix mic capture on 48 kHz devices"
+
+# 3. Push to your fork and open a PR
+git push -u origin fix-mic-format
+gh pr create --repo OsamaBinBallZak/shhhcribble-windows --fill
+```
+
+Then the maintainer reviews the PR (and the green CI run) and merges. New to the
+codebase? Read [CLAUDE.md](CLAUDE.md) first — it explains how everything works.
+
 ## Credits
 
 Original macOS app © Henry (`itsHendri`). Transcription by
