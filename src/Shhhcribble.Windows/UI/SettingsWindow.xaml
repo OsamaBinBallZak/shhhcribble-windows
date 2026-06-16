@@ -1,0 +1,52 @@
+<Window x:Class="Shhhcribble.Windows.UI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Shhhcribble Settings"
+        Width="520" Height="560"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Transcription model" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <ComboBox Grid.Row="1" x:Name="ModelCombo" DisplayMemberPath="DisplayName" Margin="0,0,0,14"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,14">
+            <StackPanel Width="230" Margin="0,0,16,0">
+                <TextBlock Text="Hotkey" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="HotkeyCombo" DisplayMemberPath="Label"/>
+            </StackPanel>
+            <StackPanel Width="230">
+                <TextBlock Text="Activation" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="ActivationCombo" DisplayMemberPath="Label"/>
+            </StackPanel>
+        </StackPanel>
+
+        <CheckBox Grid.Row="3" x:Name="FillerCheck" Content="Strip filler words (um, uh, you know…)" Margin="0,0,0,8"/>
+        <CheckBox Grid.Row="4" x:Name="PauseMusicCheck" Content="Pause music while recording" Margin="0,0,0,16"/>
+
+        <TextBlock Grid.Row="5" Text="Personal dictionary (phrase → replacement)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <DataGrid Grid.Row="6" x:Name="DictGrid" AutoGenerateColumns="False" CanUserAddRows="True"
+                  HeadersVisibility="Column" Margin="0,0,0,12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Phrase" Binding="{Binding Phrase}" Width="*"/>
+                <DataGridTextColumn Header="Replacement" Binding="{Binding Replacement}" Width="*"/>
+                <DataGridCheckBoxColumn Header="Case" Binding="{Binding CaseSensitive}" Width="60"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="RemoveRowButton" Content="Remove selected" Width="130" Margin="0,0,8,0"/>
+            <Button x:Name="SaveButton" Content="Save" Width="90" IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

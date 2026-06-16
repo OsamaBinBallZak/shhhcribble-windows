@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Shhhcribble.Cli/Shhhcribble.Cli.csproj" />
     <Project Path="src/Shhhcribble.Core/Shhhcribble.Core.csproj" />
+    <Project Path="src/Shhhcribble.Windows/Shhhcribble.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Shhhcribble.Core.Tests/Shhhcribble.Core.Tests.csproj" />

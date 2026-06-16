@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Windows 10 SDK TFM so we can use SMTC (Windows.Media.Control) for music pause. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Shhhcribble</AssemblyName>
+    <RootNamespace>Shhhcribble.Windows</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Allows restore/compile of this Windows-targeting project on non-Windows
+         dev machines (the maintainer develops on macOS). The actual build +
+         packaging still happens on the windows-latest CI runner. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shhhcribble.Core\Shhhcribble.Core.csproj" />
+  </ItemGroup>
+
+</Project>
